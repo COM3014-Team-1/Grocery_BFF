@@ -1,0 +1,81 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Grocery Online Shopping BFF",
+    "description": "API documentation for the BFF microservice"
+  },
+  "host": "localhost:5000",
+  "basePath": "/",
+  "schemes": ["http"],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Check if the BFF service is running",
+        "responses": {
+          "200": {
+            "description": "Service is up"
+          }
+        }
+      }
+    },
+    "/user/{user_id}": {
+      "get": {
+        "summary": "Get User",
+        "description": "Fetch user data by user ID",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User data"
+          }
+        }
+      }
+    },
+    "/order/{order_id}": {
+      "get": {
+        "summary": "Get Order",
+        "description": "Fetch order data by order ID",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order data"
+          }
+        }
+      }
+    },
+    "/product/{product_id}": {
+      "get": {
+        "summary": "Get Product",
+        "description": "Fetch product data by product ID",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product data"
+          }
+        }
+      }
+    }
+  }
+}
