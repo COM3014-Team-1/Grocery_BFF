@@ -1,46 +1,47 @@
 from flask import Flask, jsonify
+from flask_smorest import Api  # Import Flask-Smorest API
 from flask_swagger_ui import get_swaggerui_blueprint
-from API.usercontroller import user_controller
-from Application.user.getuser.getuserhandler import get_user_handler  # Import the handler
-from config import appsettings
+import importlib
+import pkgutil
+
+# Import controllers
+from API import usercontroller #, ordercontroller, productcontroller
 
 app = Flask(__name__)
 
-# Print to verify the configuration
-print("MICROSERVICE_URL:", appsettings['MICROSERVICE_URL'])
+# Enable Flask-Smorest OpenAPI Specification
+app.config["API_TITLE"] = "Grocery Online Shopping BFF"
+app.config["API_VERSION"] = "v1"
+app.config["OPENAPI_VERSION"] = "3.0.2"
+app.config["OPENAPI_URL_PREFIX"] = "/"  # Ensure /openapi.json is generated
 
-# Swagger setup
-SWAGGER_URL = '/swagger'
-API_URL = '/static/swagger.json'
+api = Api(app)  # Attach Flask-Smorest API
+
+# Auto Register Blueprints from API folder
+def register_blueprints():
+    """Automatically registers all API blueprints inside API folder."""
+    for _, module_name, _ in pkgutil.iter_modules(["API"]):
+        module = importlib.import_module(f"API.{module_name}")
+        if hasattr(module, "blueprint"):  
+            api.register_blueprint(module.blueprint)  # Register using Flask-Smorest
+            print(f"✔ Registered: {module_name}")
+
+register_blueprints()
+
+# Swagger UI Setup
+SWAGGER_URL = "/swagger"
+API_URL = "/openapi.json"  # Auto-generated OpenAPI JSON
 swaggerui_blueprint = get_swaggerui_blueprint(
     SWAGGER_URL,
     API_URL,
-    config={
-        'app_name': "Grocery Online Shopping BFF"
-    }
+    config={"app_name": "Grocery Online Shopping BFF"}
 )
 app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
 # Health Check Endpoint
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "BFF is running"}), 200
 
-# User Endpoint (call the actual handler instead of returning hardcoded data)
-@app.route('/user/<int:user_id>', methods=['GET'])
-def get_user(user_id):
-    user_data = get_user_handler(user_id)  # Call the real handler
-    return jsonify(user_data)
-
-# Order Endpoint
-@app.route('/order/<int:order_id>', methods=['GET'])
-def get_order(order_id):
-    return jsonify({"order_id": order_id, "status": "Completed"})
-
-# Product Endpoint
-@app.route('/product/<int:product_id>', methods=['GET'])
-def get_product(product_id):
-    return jsonify({"product_id": product_id, "name": "Apple", "price": 1.2})
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)

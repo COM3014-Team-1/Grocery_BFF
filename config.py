@@ -10,3 +10,4 @@ def load_config():
     return config
 
 appsettings = load_config()  # Load configuration into a variable
+
