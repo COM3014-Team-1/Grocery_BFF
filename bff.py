@@ -5,7 +5,7 @@ import importlib
 import pkgutil
 
 # Import controllers
-from API import usercontroller #, ordercontroller, productcontroller
+from API import usercontroller, productcontroller
 
 app = Flask(__name__)
 

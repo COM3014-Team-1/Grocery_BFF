@@ -7,4 +7,6 @@ pip install flask_smorest # install smorest
 python bff.py
 
 # 3. Open Swagger UI
-# Visit http://127.0.0.1:5000/swagger in your browser
+Visit http://127.0.0.1:5000/swagger in your browser
+
+pip install quart
