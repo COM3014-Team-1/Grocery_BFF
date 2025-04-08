@@ -3,11 +3,13 @@ from flask_smorest import Api  # Import Flask-Smorest API
 from flask_swagger_ui import get_swaggerui_blueprint
 import importlib
 import pkgutil
+from flask_cors import CORS
 
 # Import controllers
 from API import usercontroller, productcontroller
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Enable Flask-Smorest OpenAPI Specification
 app.config["API_TITLE"] = "Grocery Online Shopping BFF"
