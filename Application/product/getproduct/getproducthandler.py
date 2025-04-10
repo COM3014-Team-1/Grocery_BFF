@@ -30,8 +30,6 @@ class ProductHandler:
         return filtered_products
         '''
         
-        # Uncomment this for real microservice connection
-        #response = self.client.get(f"{self.product_service_url}/products", params={"search": search} if search else {})
         print(f"******url of prod ms: {PROD_MICROSERVICE_URL}/products")   
         response = self.client.get(f"{PROD_MICROSERVICE_URL}/products")
          
@@ -42,18 +40,19 @@ class ProductHandler:
         return [ProductVM.from_dict(prod) for prod in products_json]
         
 
-    def get_product_by_id(self, product_id: int) -> Optional[ProductVM]:
-        """Retrieve a single product by its ID."""
+    def get_product_by_id(self, product_id: str) -> ProductVM:
+        # Step 1: Call product microservice
+        product_resp = self.client.get(f"{self.product_service_url}/products/{product_id}")
+        product_resp.raise_for_status()
+        product_data = product_resp.json()
 
-        # Get dummy data from Seed (already as ProductVM instances)
-        product_data = Seed.get_dummy_products()
-        all_products = product_data['data']
+        # Step 2: Get category name from category_id
+        category_id = product_data["category_id"]
+        category_resp = self.client.get(f"{self.product_service_url}/categories/{category_id}")
+        category_resp.raise_for_status()
+        category_data = category_resp.json()
+        category_name = category_data.get("name", "Unknown")
 
-        return next((prod for prod in all_products if prod.product_id == product_id), None)
-
-        '''
-        # Uncomment this for real microservice connection
-        response = self.client.get(f"{self.product_service_url}/products/{product_id}")
-        response.raise_for_status()
-        return ProductVM.from_dict(response.json())
-        '''
+        # Step 3: Merge and return
+        product_data["category_name"] = category_name
+        return ProductVM.from_dict(product_data)

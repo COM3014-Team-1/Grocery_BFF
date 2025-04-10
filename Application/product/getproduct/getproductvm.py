@@ -1,21 +1,22 @@
 from dataclasses import dataclass
 from typing import Optional
+import uuid
 
 @dataclass
 class ProductVM:
-    product_id: int
+    product_id: uuid
     name: str
     price: float
     quantity: int
-    category_id: int
+    category_id: uuid
     image_url: str
     rating: float
     is_halal: bool
     is_vegan: bool
     category_name: str
 
-    def __init__(self, product_id: int, name: str, price: float, quantity: int,
-                 category_id: int, image_url: str, rating: float,
+    def __init__(self, product_id: uuid, name: str, price: float, quantity: int,
+                 category_id: uuid, image_url: str, rating: float,
                  is_halal: bool, is_vegan: bool, category_name: str):
         self.product_id = product_id
         self.name = name
