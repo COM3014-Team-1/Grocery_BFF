@@ -1,6 +1,6 @@
 import requests
 from Application.user.getuser.getuserdto import GetUserDTO
-from Application.user.getuser.getuservm import GetUserVM
+from Application.user.getuser.getuservm import UserVM
 from config import appsettings
 '''
 def get_user_handler(user_id: int) -> GetUserVM:
@@ -18,14 +18,10 @@ class UserHandler:
         print(f"****** URL of user microservice: {USER_MICROSERVICE_URL}")
         self.client = requests.Session()
 
-    def get_user_by_id(self, user_id: int, jwt_token: str) -> Optional[GetUserVM]:
+    def get_user_by_id(self, user_id: int, jwt_token: str) -> Optional[UserVM]:
         """Retrieve a user by their user ID from the user microservice."""
-        '''
-        headers = {
-            "Authorization": f"Bearer {jwt_token}"
-        }
-        '''
-        url = f"{self.user_service_url}/user/{user_id}"
+        
+        url = f"{self.user_service_url}/api/auth/user/{user_id}"
         print(f"****** Calling user microservice at: {url}")
 
         response = self.client.get(url) #, headers=headers) when the authorization check is ready
@@ -37,7 +33,6 @@ class UserHandler:
         response.raise_for_status()
         user_json = response.json()
 
-        print(f"****** Response from user microservice: {user_json}")
-        return GetUserVM.from_dict(user_json)
+        return UserVM.from_dict(user_json)
 
 

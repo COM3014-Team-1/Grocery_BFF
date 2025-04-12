@@ -1,12 +1,13 @@
 from flask import Flask, jsonify, request
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
+from Application.user.getuser.getuserhandler import UserHandler
 from Application.user.login.logindto import LoginDTO
 from Application.user.login.loginhandler import LoginHandler
 from Application.user.login.loginvm import LoginVM
 from Application.user.signup.signuphandler import SignupHandler
 from Application.user.signup.signupdto import SignupDTO
-from Application.user.getuser.getuservm import UserVM  # Ensure you have the UserVM import
+from Application.user.getuser.getuservm import UserVM
 from config import appsettings
 
 # Initialize Flask app
@@ -65,6 +66,31 @@ class UserSignupAPI(MethodView):
 
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+
+# Define the API to retrieve user details by ID
+@blueprint.route("/user/<int:user_id>", methods=["GET"])
+class GetUserAPI(MethodView):
+    def get(self, user_id):
+        """Retrieve a user by their user ID"""
+        try:
+            # Get the JWT token from request headers
+            jwt_token = request.headers.get('Authorization')
+
+            # Call the handler to fetch user details
+            get_user_handler = UserHandler(USER_MICROSERVICE_URL)
+            user = get_user_handler.get_user_by_id(user_id, jwt_token)
+
+            if user:
+                # If user is found, return user details
+                return jsonify(user.to_dict()), 200
+            else:
+                # If user is not found, return 404 error
+                return jsonify({"message": "User not found"}), 404
+
+        except Exception as e:
+            # Catch any errors and return error message
+            print(f"Error getting user: {str(e)}")
+            return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 # Register blueprint with the Flask app
 app.register_blueprint(blueprint)
