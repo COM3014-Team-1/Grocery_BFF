@@ -3,17 +3,17 @@ from datetime import datetime
 
 class LoginDTO(Schema):
     """Schema for login request validation"""
-    username = fields.String(required=True, description="User's username")
+    email = fields.String(required=True, description="User's email")
     password = fields.String(required=True, description="User's password")
 
     @staticmethod
     def from_json(data):
         """Create a LoginDTO instance from JSON"""
-        return {"username": data.get("username"), "password": data.get("password")}
+        return {"email": data.get("email"), "password": data.get("password")}
 
     def to_dict(self):
         """Convert instance to dictionary"""
-        return {"username": self.username, "password": self.password}
+        return {"email": self.email, "password": self.password}
 
 class UserServiceLoginSchema(Schema):
     identifier = fields.String(required=True)
@@ -27,7 +27,7 @@ class UserServiceLoginSchema(Schema):
     def from_login_dto(login_data):
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         return {
-            "identifier": login_data["username"],
+            "identifier": login_data["email"],
             "password": login_data["password"],
             "remember_me": False,
             "created_at": now,

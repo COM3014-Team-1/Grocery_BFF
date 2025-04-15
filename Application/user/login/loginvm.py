@@ -1,9 +1,9 @@
 class LoginVM:
-    def __init__(self, token, user_id, username):
+    def __init__(self, token, user_id, name):
         self.token = token
         self.user = {
             "id": user_id,
-            "username": username
+            "name": name
         }
 
     def to_dict(self):
@@ -24,6 +24,6 @@ class LoginVM:
 
         # Extract user_id and username from the user data.
         user_id = user_data.get("user_id")
-        username = user_data.get("name")  # Assuming 'name' is the equivalent of 'username'
+        name = user_data.get("name")  # Assuming 'name' is the equivalent of 'username'
 
-        return LoginVM(token=token, user_id=user_id, username=username)
+        return LoginVM(token=token, user_id=user_id, name=name)
