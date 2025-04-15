@@ -1,3 +1,4 @@
+import uuid
 import requests
 from Application.user.getuser.getuserdto import GetUserDTO
 from Application.user.getuser.getuservm import UserVM
@@ -18,7 +19,7 @@ class UserHandler:
         print(f"****** URL of user microservice: {USER_MICROSERVICE_URL}")
         self.client = requests.Session()
 
-    def get_user_by_id(self, user_id: int, jwt_token: str) -> Optional[UserVM]:
+    def get_user_by_id(self, user_id: uuid, jwt_token: str) -> Optional[UserVM]:
         """Retrieve a user by their user ID from the user microservice."""
         
         url = f"{self.user_service_url}/api/auth/user/{user_id}"

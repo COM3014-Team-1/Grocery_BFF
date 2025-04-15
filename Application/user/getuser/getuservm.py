@@ -1,6 +1,6 @@
 class UserVM:
     def __init__(self, user_id, username, email, phone, address, city, state, zipcode, created_at):
-        self.user_id = user_id
+        self.user_id = str(user_id)
         self.username = username
         self.email = email
         self.phone = phone
@@ -28,7 +28,7 @@ class UserVM:
     def from_dict(data):
         """Create UserVM instance from dictionary."""
         return UserVM(
-            user_id=data.get("user_id"),
+            user_id=str(data.get("user_id")),
             username=data.get("username"),
             email=data.get("email"),
             phone=data.get("phone"),

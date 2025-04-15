@@ -9,6 +9,7 @@ from Application.user.signup.signuphandler import SignupHandler
 from Application.user.signup.signupdto import SignupDTO
 from Application.user.getuser.getuservm import UserVM
 from config import appsettings
+import uuid
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -68,7 +69,7 @@ class UserSignupAPI(MethodView):
             return jsonify({"error": str(e)}), 500
 
 # Define the API to retrieve user details by ID
-@blueprint.route("/user/<int:user_id>", methods=["GET"])
+@blueprint.route("/user/<uuid:user_id>", methods=["GET"])
 class GetUserAPI(MethodView):
     def get(self, user_id):
         """Retrieve a user by their user ID"""
