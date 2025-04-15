@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 from flask.views import MethodView
 from flask_smorest import Blueprint
+from Application.order.cart.addtocartdto import AddToCartDTO
+from Application.order.cart.carthandler import CartHandler
 from Application.order.getorder.getorderhandler import OrderHandler  # Import the OrderHandler
 from config import appsettings
 
@@ -27,6 +29,21 @@ class GetUserCartAPI(MethodView):
             # Handle errors if the cart retrieval fails
             return jsonify({"error": str(e)}), 500
 
+@blueprint.route("/cart/add", methods=["POST"])
+class AddToCartAPI(MethodView):
+    @blueprint.arguments(AddToCartDTO)
+    def post(self, data):
+        try:
+            handler = CartHandler(ORDER_MICROSERVICE_URL)
+            cart_item = handler.add_to_cart(
+                user_id=data['user_id'],
+                product_id=data['product_id'],
+                quantity=data['quantity'],
+                unit_price=data['unit_price']
+            )
+            return jsonify(cart_item.to_dict()), 201
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 # Register blueprint with the Flask app
 app.register_blueprint(blueprint)
 
