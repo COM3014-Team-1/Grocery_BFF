@@ -1,10 +1,16 @@
-from flask import Flask, jsonify, request
+from flask import Flask, abort, jsonify, request
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from Application.order.cart.addtocartdto import AddToCartDTO
 from Application.order.cart.carthandler import CartHandler
-from Application.order.getorder.getorderhandler import OrderHandler  # Import the OrderHandler
+from Application.order.getorder.orderdto import OrderDTO
+from Application.order.getorder.orderhistoryvm import GetOrderHistoryVM
+from Application.order.getorder.orderwithorderitemsvm import OrderVM
+from Application.order.getorder.orderhandler import OrderHandler  # Import the OrderHandler
 from config import appsettings
+from marshmallow import ValidationError
+import json
+from flask import Response
 
 # Initialize Flask app and blueprint
 app = Flask(__name__)
@@ -17,10 +23,10 @@ class GetUserCartAPI(MethodView):
     def get(self, user_id):
         """Fetch the cart for a specific user."""
         try:
-            order_handler = OrderHandler(ORDER_MICROSERVICE_URL)
+            cart_handler = CartHandler(ORDER_MICROSERVICE_URL)
 
             # Fetch cart items for the user
-            cart_items = order_handler.get_user_cart(user_id)
+            cart_items = cart_handler.get_user_cart(user_id)
 
             # Return the cart items in the desired format
             return jsonify([item.to_dict() for item in cart_items]), 200
@@ -42,6 +48,77 @@ class AddToCartAPI(MethodView):
                 unit_price=data['unit_price']
             )
             return jsonify(cart_item.to_dict()), 201
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+@blueprint.route("/user/<string:user_id>/orders", methods=["GET"])
+class GetUserOrdersAPI(MethodView):
+    def get(self, user_id):
+        try:
+            handler = OrderHandler(ORDER_MICROSERVICE_URL)
+            order_list = handler.get_user_orders(user_id)
+
+            order_vm_list = OrderVM.from_list(order_list)
+            return jsonify([order.to_dict() for order in order_vm_list]), 200
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+@blueprint.route("/<order_id>", methods=["GET"])
+class GetOrderHistoryAPI(MethodView):
+    def get(self, order_id):
+        try:
+            handler = OrderHandler(ORDER_MICROSERVICE_URL)
+            order_data = handler.get_order_by_id(order_id)
+
+            if not order_data:
+                abort(404, message="Order not found")
+
+            vm = GetOrderHistoryVM.from_dict(order_data)
+            return jsonify(vm.to_dict()), 200
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+@blueprint.route("/create", methods=["POST"])
+class CreateOrderAPI(MethodView):
+    @blueprint.arguments(OrderDTO)
+    def post(self, data):
+        try:
+            print(f"****request: {data}")
+            handler = OrderHandler(ORDER_MICROSERVICE_URL)
+            result = handler.create_order(data)
+
+            return Response(json.dumps(result, default=str), mimetype="application/json", status=201)
+
+        except ValidationError as err:
+            return jsonify({"error": str(err)}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+@blueprint.route("/update/<order_id>", methods=["PUT"])
+class UpdateOrderAPI(MethodView):
+    @blueprint.arguments(OrderDTO(partial=True))
+    def put(self, data, order_id):
+        try:
+            handler = OrderHandler(ORDER_MICROSERVICE_URL)
+            result = handler.update_order(order_id, data)
+            if not result:
+                return jsonify({"message": "Order not found"}), 404
+            return jsonify(result), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+@blueprint.route("/cancel/<order_id>", methods=["DELETE"])
+class CancelOrderAPI(MethodView):
+    def delete(self, order_id):
+        try:
+            handler = OrderHandler(ORDER_MICROSERVICE_URL)
+            result = handler.cancel_order(order_id)
+            if not result:
+                return jsonify({"message": "Order not found or already cancelled"}), 404
+            return jsonify(result), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 # Register blueprint with the Flask app
