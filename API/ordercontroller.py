@@ -11,6 +11,7 @@ from config import appsettings
 from marshmallow import ValidationError
 import json
 from flask import Response
+from flask_jwt_extended import jwt_required, get_jwt_identity  # Import JWT-related functions
 
 # Initialize Flask app and blueprint
 app = Flask(__name__)
@@ -20,13 +21,18 @@ ORDER_MICROSERVICE_URL = appsettings['OrderMicroserviceUrl']  # Load the URL fro
 # Endpoint to get the user's cart
 @blueprint.route('/cart/<uuid:user_id>', methods=['GET'])
 class GetUserCartAPI(MethodView):
+    @jwt_required()  # Ensure token is required
     def get(self, user_id):
         """Fetch the cart for a specific user."""
+        jwt_user = get_jwt_identity()  # Get user identity from the token
+        if jwt_user != str(user_id):  # Ensure user matches
+            return jsonify({"error": "Unauthorized"}), 401
+
         try:
             cart_handler = CartHandler(ORDER_MICROSERVICE_URL)
-
+            jwt_token = request.headers.get('Authorization')  # Bearer token
             # Fetch cart items for the user
-            cart_items = cart_handler.get_user_cart(user_id)
+            cart_items = cart_handler.get_user_cart(user_id,jwt_token)
 
             # Return the cart items in the desired format
             return jsonify([item.to_dict() for item in cart_items]), 200
@@ -37,8 +43,13 @@ class GetUserCartAPI(MethodView):
 
 @blueprint.route("/cart/add", methods=["POST"])
 class AddToCartAPI(MethodView):
+    @jwt_required()  # Ensure token is required
     @blueprint.arguments(AddToCartDTO)
     def post(self, data):
+        jwt_user = get_jwt_identity()  # Get user identity from the token
+        if not jwt_user:  # Check if the token is valid
+            return jsonify({"error": "Unauthorized"}), 401
+
         try:
             handler = CartHandler(ORDER_MICROSERVICE_URL)
             cart_item = handler.add_to_cart(
@@ -53,10 +64,16 @@ class AddToCartAPI(MethodView):
 
 @blueprint.route("/user/<string:user_id>/orders", methods=["GET"])
 class GetUserOrdersAPI(MethodView):
+    @jwt_required()  # Ensure token is required
     def get(self, user_id):
+        jwt_user = get_jwt_identity()  # Get user identity from the token
+        if jwt_user != user_id:
+            return jsonify({"error": "Unauthorized"}), 401
+
         try:
+            token = request.headers.get("Authorization")  # Pass the JWT token to the handler
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
-            order_list = handler.get_user_orders(user_id)
+            order_list = handler.get_user_orders(user_id, token)
 
             order_vm_list = OrderVM.from_list(order_list)
             return jsonify([order.to_dict() for order in order_vm_list]), 200
@@ -66,7 +83,12 @@ class GetUserOrdersAPI(MethodView):
 
 @blueprint.route("/<order_id>", methods=["GET"])
 class GetOrderHistoryAPI(MethodView):
+    @jwt_required()  # Ensure token is required
     def get(self, order_id):
+        jwt_user = get_jwt_identity()  # Get user identity from the token
+        if not jwt_user:  # Ensure valid token
+            return jsonify({"error": "Unauthorized"}), 401
+
         try:
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
             order_data = handler.get_order_by_id(order_id)
@@ -82,10 +104,14 @@ class GetOrderHistoryAPI(MethodView):
 
 @blueprint.route("/create", methods=["POST"])
 class CreateOrderAPI(MethodView):
+    @jwt_required()  # Ensure token is required
     @blueprint.arguments(OrderDTO)
     def post(self, data):
+        jwt_user = get_jwt_identity()  # Get user identity from the token
+        if not jwt_user:  # Ensure valid token
+            return jsonify({"error": "Unauthorized"}), 401
+
         try:
-            print(f"****request: {data}")
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
             result = handler.create_order(data)
 
@@ -96,11 +122,15 @@ class CreateOrderAPI(MethodView):
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-
 @blueprint.route("/update/<order_id>", methods=["PUT"])
 class UpdateOrderAPI(MethodView):
+    @jwt_required()  # Ensure token is required
     @blueprint.arguments(OrderDTO(partial=True))
     def put(self, data, order_id):
+        jwt_user = get_jwt_identity()  # Get user identity from the token
+        if not jwt_user:  # Ensure valid token
+            return jsonify({"error": "Unauthorized"}), 401
+
         try:
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
             result = handler.update_order(order_id, data)
@@ -112,7 +142,12 @@ class UpdateOrderAPI(MethodView):
 
 @blueprint.route("/cancel/<order_id>", methods=["DELETE"])
 class CancelOrderAPI(MethodView):
+    @jwt_required()  # Ensure token is required
     def delete(self, order_id):
+        jwt_user = get_jwt_identity()  # Get user identity from the token
+        if not jwt_user:  # Ensure valid token
+            return jsonify({"error": "Unauthorized"}), 401
+
         try:
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
             result = handler.cancel_order(order_id)
@@ -121,6 +156,7 @@ class CancelOrderAPI(MethodView):
             return jsonify(result), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+
 # Register blueprint with the Flask app
 app.register_blueprint(blueprint)
 

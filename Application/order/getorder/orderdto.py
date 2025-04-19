@@ -7,6 +7,7 @@ class OrderItemDTO(Schema):
 
 class OrderDTO(Schema):
     user_id = fields.UUID(required=True)
+    shipping_address= fields.String(required=True)
     total_amount = fields.Float(required=True, validate=validate.Range(min=0))
     order_status = fields.String(
         required=True,
