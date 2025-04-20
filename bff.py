@@ -20,7 +20,7 @@ app.config["JWT_SECRET_KEY"] = appsettings["SECRET_KEY"]  # Used for JWT token v
 jwt = JWTManager(app)
 
 # === CORS ===
-CORS(app)
+CORS(app, supports_credentials=True)
 
 # === Flask-Smorest / Swagger Config ===
 app.config["API_TITLE"] = "Grocery Online Shopping BFF"
