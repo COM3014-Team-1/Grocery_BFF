@@ -3,6 +3,7 @@ from flask.views import MethodView
 from flask_smorest import Blueprint
 from Application.order.cart.addtocartdto import AddToCartDTO
 from Application.order.cart.carthandler import CartHandler
+from Application.order.cart.removeitemfromcartdto import RemoveFromCartDTO
 from Application.order.getorder.orderdto import OrderDTO
 from Application.order.getorder.orderhistoryvm import GetOrderHistoryVM
 from Application.order.getorder.orderwithorderitemsvm import OrderVM
@@ -61,6 +62,26 @@ class AddToCartAPI(MethodView):
                 token = token
             )
             return jsonify(cart_item.to_dict()), 201
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+@blueprint.route("/cart/remove", methods=["DELETE"])
+class RemoveFromCartAPI(MethodView):
+    @jwt_required()
+    @blueprint.arguments(RemoveFromCartDTO)
+    def delete(self, data):
+        """Remove items from cart"""
+        try:
+            token = request.headers.get("Authorization")
+            handler = CartHandler(ORDER_MICROSERVICE_URL)
+
+            user_id = data["user_id"]
+            products = data["products"]
+
+            result = handler.remove_from_cart(user_id, products, token)
+
+            return jsonify(result), 200
+
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 

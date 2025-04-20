@@ -47,3 +47,22 @@ class CartHandler:
         # Map the response data to ViewModel (CartItemVM) and return it
         cart_items = response.json()
         return [CartItemVM.from_dict(item) for item in cart_items]
+
+    def remove_from_cart(self, user_id, products, token):
+        url = f"{self.order_service_url}/cartItems"
+
+        # Get headers with the Authorization token
+        headers = self._get_auth_headers(token)
+
+        payload = {
+            "user_id": str(user_id),
+            "products": [str(p) for p in products]
+        }
+
+        response = self.client.delete(url, headers=headers, json=payload)
+    
+        if response.status_code == 404:
+            return None
+
+        response.raise_for_status()
+        return response.json()
