@@ -4,10 +4,11 @@ from flask_smorest import Blueprint
 from Application.order.cart.addtocartdto import AddToCartDTO
 from Application.order.cart.carthandler import CartHandler
 from Application.order.cart.removeitemfromcartdto import RemoveFromCartDTO
+from Application.order.cart.updateitemcartdto import CartItemUpdateDTO
 from Application.order.getorder.orderdto import OrderDTO
 from Application.order.getorder.orderhistoryvm import GetOrderHistoryVM
 from Application.order.getorder.orderwithorderitemsvm import OrderVM
-from Application.order.getorder.orderhandler import OrderHandler  # Import the OrderHandler
+from Application.order.getorder.orderhandler import OrderHandler 
 from config import appsettings
 from marshmallow import ValidationError
 import json
@@ -81,6 +82,27 @@ class RemoveFromCartAPI(MethodView):
             result = handler.remove_from_cart(user_id, products, token)
 
             return jsonify(result), 200
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+@blueprint.route("/cart/update/<string:product_id>", methods=["PUT"])
+class UpdateCartQuantityAPI(MethodView):
+    @jwt_required()
+    @blueprint.arguments(CartItemUpdateDTO)
+    def put(self, data, product_id):
+        """Update quantity of an item in the cart"""
+        try:
+            token = request.headers.get("Authorization")
+            handler = CartHandler(ORDER_MICROSERVICE_URL)
+
+            quantity = data["quantity"]
+            result = handler.update_cart_quantity(product_id, quantity, token)
+
+            if result:
+                return jsonify(result), 200
+            else:
+                return jsonify({"message": "Cart item not found"}), 404
 
         except Exception as e:
             return jsonify({"error": str(e)}), 500

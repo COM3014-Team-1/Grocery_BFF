@@ -66,3 +66,22 @@ class CartHandler:
 
         response.raise_for_status()
         return response.json()
+
+    def update_cart_quantity(self, product_id, quantity, token):
+        url = f"{self.order_service_url}/cart/{product_id}"
+
+        # Get headers with the Authorization token
+        headers = self._get_auth_headers(token)
+
+        payload = {
+            "quantity": quantity
+        }
+
+        response = self.client.put(url, json=payload, headers=headers)
+
+        if response.status_code == 404:
+            return None
+
+        response.raise_for_status()
+        return response.json()
+
