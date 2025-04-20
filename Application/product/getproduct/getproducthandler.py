@@ -10,7 +10,6 @@ class ProductHandler:
 
     def __init__(self, PROD_MICROSERVICE_URL: str):
         self.product_service_url = PROD_MICROSERVICE_URL
-        print(f"******url of prod ms: "+PROD_MICROSERVICE_URL)
         self.client = requests.Session()
 
     def get_all_products(self, search: Optional[str] = None) -> List[ProductVM]:
@@ -30,7 +29,6 @@ class ProductHandler:
         return filtered_products
         '''
         
-        print(f"******url of prod ms: {PROD_MICROSERVICE_URL}/products")   
         response = self.client.get(f"{PROD_MICROSERVICE_URL}/products")
          
         response.raise_for_status()

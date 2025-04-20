@@ -10,7 +10,6 @@ class CategoryHandler:
 
     def __init__(self, PROD_MICROSERVICE_URL: str):
         self.product_service_url = PROD_MICROSERVICE_URL
-        print(f"******url of prod ms: "+PROD_MICROSERVICE_URL)
         self.client = requests.Session()
 
     def get_all_category(self, search: Optional[str] = None) -> List[CategoryVM]:
