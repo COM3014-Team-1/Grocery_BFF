@@ -10,7 +10,7 @@ class OrderDTO(Schema):
     shipping_address= fields.String(required=True)
     total_amount = fields.Float(required=True, validate=validate.Range(min=0))
     order_status = fields.String(
-        required=True,
+        required=False,
         validate=validate.OneOf(["pending", "shipped", "delivered", "cancelled"])
     )
     order_items = fields.Nested(OrderItemDTO, many=True, required=True)

@@ -10,8 +10,7 @@ class CartHandler:
 
     def _get_auth_headers(self, token: str):
         """Helper function to return headers with the token"""
-        print(f"****token: {token}")
-        return {"Authorization": f"Bearer {token}"} if token else {}
+        return {"Authorization": f"{token}"} if token else {}
 
     def add_to_cart(self, user_id, product_id, quantity, unit_price, token: str):
         """Add a product to the user's cart."""
@@ -37,10 +36,8 @@ class CartHandler:
         
         # Construct URL for the API
         url = f"{self.order_service_url}/cart/{user_id}"
-
         # Get headers with the Authorization token
         headers = self._get_auth_headers(token)
-
         # Send GET request to fetch cart items
         response = self.client.get(url, headers=headers)
         

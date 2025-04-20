@@ -47,6 +47,7 @@ class AddToCartAPI(MethodView):
     @blueprint.arguments(AddToCartDTO)
     def post(self, data):
         jwt_user = get_jwt_identity()  # Get user identity from the token
+        token = request.headers.get('Authorization')  # Bearer token
         if not jwt_user:  # Check if the token is valid
             return jsonify({"error": "Unauthorized"}), 401
 
@@ -56,7 +57,8 @@ class AddToCartAPI(MethodView):
                 user_id=data['user_id'],
                 product_id=data['product_id'],
                 quantity=data['quantity'],
-                unit_price=data['unit_price']
+                unit_price=data['unit_price'],
+                token = token
             )
             return jsonify(cart_item.to_dict()), 201
         except Exception as e:
@@ -86,12 +88,14 @@ class GetOrderHistoryAPI(MethodView):
     @jwt_required()  # Ensure token is required
     def get(self, order_id):
         jwt_user = get_jwt_identity()  # Get user identity from the token
+
         if not jwt_user:  # Ensure valid token
             return jsonify({"error": "Unauthorized"}), 401
 
         try:
+            token = request.headers.get("Authorization")  # Pass the JWT token to the handler
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
-            order_data = handler.get_order_by_id(order_id)
+            order_data = handler.get_order_by_id(order_id,token)
 
             if not order_data:
                 abort(404, message="Order not found")
@@ -112,8 +116,9 @@ class CreateOrderAPI(MethodView):
             return jsonify({"error": "Unauthorized"}), 401
 
         try:
+            token = request.headers.get("Authorization")  # Pass the JWT token to the handler
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
-            result = handler.create_order(data)
+            result = handler.create_order(data, token)
 
             return Response(json.dumps(result, default=str), mimetype="application/json", status=201)
 
@@ -132,8 +137,9 @@ class UpdateOrderAPI(MethodView):
             return jsonify({"error": "Unauthorized"}), 401
 
         try:
+            token = request.headers.get("Authorization")  # Pass the JWT token to the handler
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
-            result = handler.update_order(order_id, data)
+            result = handler.update_order(order_id, data, token)
             if not result:
                 return jsonify({"message": "Order not found"}), 404
             return jsonify(result), 200
@@ -149,8 +155,9 @@ class CancelOrderAPI(MethodView):
             return jsonify({"error": "Unauthorized"}), 401
 
         try:
+            token = request.headers.get("Authorization")  # Pass the JWT token to the handler
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
-            result = handler.cancel_order(order_id)
+            result = handler.cancel_order(order_id, token)
             if not result:
                 return jsonify({"message": "Order not found or already cancelled"}), 404
             return jsonify(result), 200

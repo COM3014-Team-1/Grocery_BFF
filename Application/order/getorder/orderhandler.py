@@ -7,8 +7,7 @@ class OrderHandler:
         self.client = requests.Session()
 
     def _get_auth_headers(self, token):
-        print(f"****token: {token}")
-        return {"Authorization": f"Bearer {token}"} if token else {}
+        return {"Authorization": f"{token}"} if token else {}
 
     def get_user_orders(self, user_id: str, token=None):
         url = f"{self.order_service_url}/users/{user_id}/orders"
