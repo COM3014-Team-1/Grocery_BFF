@@ -10,6 +10,7 @@ from Application.user.signup.signupdto import SignupDTO
 from Application.user.getuser.getuservm import UserVM
 from config import appsettings
 from flask_jwt_extended import jwt_required
+from flask import make_response
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -37,6 +38,63 @@ class LoginAPI(MethodView):
 
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+
+from flask import request
+
+@blueprint.route("/login_cookies", methods=["POST"])
+class LoginAPI_Cookies(MethodView):
+    @blueprint.arguments(LoginDTO)
+    def post(self, data):
+        """User Login API to store token in cookies"""
+        try:
+            user_response, status_code = LoginHandler.login(data)
+
+            if status_code == 200:
+                login_vm = LoginVM.from_json(user_response)
+                response = make_response(jsonify(login_vm.to_dict()), 200)
+
+                # Extract token
+                token = login_vm.token
+
+                # Set it in an HTTP-only cookie
+                response.set_cookie(
+                    key='token',
+                    value=token,
+                    httponly=True,         # Ensure it's set to True in production (for security)
+                    secure=True,           # Set to True if using HTTPS
+                    samesite='Lax',        # Or 'Strict' / 'None' based on your setup
+                    max_age=3600           # 1 hour expiration
+                )
+
+                # Log the cookie being set for debugging
+                print("*******Set-Cookie header:", response.headers.get('Set-Cookie'))
+
+                return response
+
+            return jsonify({"message": "Invalid credentials"}), 401
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+# ----------------------------------------
+# Logout API - Clear Token Cookie
+# ----------------------------------------
+@blueprint.route("/logout", methods=["POST"])
+class LogoutAPI(MethodView):
+    def post(self):
+        """Logs the user out by clearing the token cookie."""
+        response = make_response(jsonify({"message": "Logout successful"}), 200)
+
+        # Clear the token cookie
+        response.set_cookie(
+            key='token',
+            value='',
+            expires=0,          # Expire immediately
+            httponly=False,     # Should match what you used during login
+            secure=False,       # Match your login setup
+            samesite='Lax'      # Consistent with login setup
+        )
+        return response
+
 
 # ----------------------------------------
 # Signup Endpoint
