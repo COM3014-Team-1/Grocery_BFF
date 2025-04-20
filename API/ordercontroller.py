@@ -45,24 +45,38 @@ class GetUserCartAPI(MethodView):
 
 @blueprint.route("/cart/add", methods=["POST"])
 class AddToCartAPI(MethodView):
-    @jwt_required()  # Ensure token is required
+    @jwt_required()
     @blueprint.arguments(AddToCartDTO)
     def post(self, data):
-        jwt_user = get_jwt_identity()  # Get user identity from the token
-        token = request.headers.get('Authorization')  # Bearer token
-        if not jwt_user:  # Check if the token is valid
+        jwt_user = get_jwt_identity()
+        token = request.headers.get('Authorization')
+        if not jwt_user:
             return jsonify({"error": "Unauthorized"}), 401
 
         try:
             handler = CartHandler(ORDER_MICROSERVICE_URL)
+            
+            # Step 1: Add to cart via Order MS
             cart_item = handler.add_to_cart(
                 user_id=data['user_id'],
                 product_id=data['product_id'],
                 quantity=data['quantity'],
                 unit_price=data['unit_price'],
-                token = token
+                token=token
             )
-            return jsonify(cart_item.to_dict()), 201
+
+            cart_dict = cart_item.to_dict()
+
+            # Step 2: Fetch product info from Product MS
+            product_info = handler.get_product_info(data['product_id'])
+
+            # Step 3: Merge product info into cart item response
+            if product_info:
+                cart_dict["product_name"] = product_info.get("name")
+                cart_dict["image_url"] = product_info.get("image_url")
+
+            return jsonify(cart_dict), 201
+
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 

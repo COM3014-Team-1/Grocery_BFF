@@ -1,13 +1,14 @@
 from flask import Flask, jsonify, request
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
-from Application.user.getuser.getuserhandler import UserHandler
+from Application.user.userinfo.edituserdto import EditUserDTO
+from Application.user.userinfo.userhandler import UserHandler
 from Application.user.login.logindto import LoginDTO
 from Application.user.login.loginhandler import LoginHandler
 from Application.user.login.loginvm import LoginVM
 from Application.user.signup.signuphandler import SignupHandler
 from Application.user.signup.signupdto import SignupDTO
-from Application.user.getuser.getuservm import UserVM
+from Application.user.userinfo.getuservm import UserVM
 from config import appsettings
 from flask_jwt_extended import jwt_required
 from flask import make_response
@@ -149,6 +150,26 @@ class GetUserAPI(MethodView):
             print(f"Error getting user: {str(e)}")
             return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
+# ----------------------------------------
+# Edit User by ID (Token Required)
+# ----------------------------------------
+@blueprint.route("/user/<uuid:user_id>/edit", methods=["PUT"])
+class EditUserAPI(MethodView):
+    @jwt_required()
+    @blueprint.arguments(EditUserDTO)
+    def put(self, data, user_id):
+        """Edit user details"""
+        try:
+            jwt_token = request.headers.get("Authorization")
+            handler = UserHandler(USER_MICROSERVICE_URL)
+            updated_user = handler.edit_user(user_id, data, jwt_token)
+
+            if updated_user:
+                return jsonify(updated_user.to_dict()), 200
+            return jsonify({"message": "User not found"}), 404
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 # Register blueprint
 app.register_blueprint(blueprint)
 

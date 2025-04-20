@@ -85,3 +85,9 @@ class CartHandler:
         response.raise_for_status()
         return response.json()
 
+    def get_product_info(self, product_id):
+        product_resp = requests.get(f"{appsettings['ProductMicroserviceUrl']}/products/{product_id}")
+
+        if product_resp.status_code == 200:
+            return product_resp.json()
+        return None
