@@ -20,27 +20,42 @@ app = Flask(__name__)
 blueprint = Blueprint("orders", __name__, url_prefix="/order", description="Order Management")
 ORDER_MICROSERVICE_URL = appsettings['OrderMicroserviceUrl']  # Load the URL from appsettings
 
-# Endpoint to get the user's cart
 @blueprint.route('/cart/<uuid:user_id>', methods=['GET'])
 class GetUserCartAPI(MethodView):
-    @jwt_required()  # Ensure token is required
+    @jwt_required()
     def get(self, user_id):
-        """Fetch the cart for a specific user."""
-        jwt_user = get_jwt_identity()  # Get user identity from the token
-        if jwt_user != str(user_id):  # Ensure user matches
+        """Fetch the cart for a specific user with product details"""
+        jwt_user = get_jwt_identity()
+        if jwt_user != str(user_id):
             return jsonify({"error": "Unauthorized"}), 401
 
         try:
             cart_handler = CartHandler(ORDER_MICROSERVICE_URL)
-            jwt_token = request.headers.get('Authorization')  # Bearer token
-            # Fetch cart items for the user
-            cart_items = cart_handler.get_user_cart(user_id,jwt_token)
+            
+            jwt_token = request.headers.get('Authorization')
 
-            # Return the cart items in the desired format
-            return jsonify([item.to_dict() for item in cart_items]), 200
+            # Step 1: Get cart items
+            cart_items = cart_handler.get_user_cart(user_id, jwt_token)
+
+            # Step 2: Enrich with product info
+            enriched_cart = []
+            for item in cart_items:
+                cart_dict = item.to_dict()
+                try:
+                    print("*****product id: "+item.product_id)
+                    product_info = cart_handler.get_product_info(item.product_id, jwt_token)
+                    cart_dict["product_name"] = product_info.get("name")
+                    cart_dict["image_url"] = product_info.get("image_url")
+                except Exception as ex:
+                    cart_dict["product_name"] = "Unknown"
+                    cart_dict["image_url"] = ""
+                    print(f"Failed to fetch product for {item.product_id}: {ex}")
+
+                enriched_cart.append(cart_dict)
+
+            return jsonify(enriched_cart), 200
 
         except Exception as e:
-            # Handle errors if the cart retrieval fails
             return jsonify({"error": str(e)}), 500
 
 @blueprint.route("/cart/add", methods=["POST"])
@@ -68,7 +83,7 @@ class AddToCartAPI(MethodView):
             cart_dict = cart_item.to_dict()
 
             # Step 2: Fetch product info from Product MS
-            product_info = handler.get_product_info(data['product_id'])
+            product_info = handler.get_product_info(data['product_id'], token)
 
             # Step 3: Merge product info into cart item response
             if product_info:
