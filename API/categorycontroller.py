@@ -1,7 +1,6 @@
 ﻿from flask import Flask, jsonify, request
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
-from flask_jwt_extended import jwt_required
 from config import appsettings
 
 from Application.category.getcategory.getcategoryhandler import CategoryHandler
@@ -17,12 +16,10 @@ category_handler = CategoryHandler(PROD_MICROSERVICE_URL)
 
 @blueprint.route("")
 class CategoryListAPI(MethodView):
-    @jwt_required()
     def get(self):
         """Retrieve list of all categories (auth required)"""
         try:
-            token = request.headers.get('Authorization')  
-            categories = category_handler.get_all_category(token=token)
+            categories = category_handler.get_all_category()
 
             if not categories:
                 abort(404, message="No categories found")
@@ -35,12 +32,10 @@ class CategoryListAPI(MethodView):
 
 @blueprint.route("/<int:category_id>")
 class CategoryByIdAPI(MethodView):
-    @jwt_required()
     def get(self, category_id):
-        """Retrieve a single category by its ID (auth required)"""
+        """Retrieve a single category by its ID ()"""
         try:
-            token = request.headers.get('Authorization')  # ✅ get token
-            category = category_handler.get_product_by_id(category_id, token=token)
+            category = category_handler.get_product_by_id(category_id)
 
             if not category:
                 abort(404, message=f"Category with id {category_id} not found")
