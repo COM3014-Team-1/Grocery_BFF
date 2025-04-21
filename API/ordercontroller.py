@@ -53,6 +53,7 @@ class GetUserCartAPI(MethodView):
 
                 enriched_cart.append(cart_dict)
 
+            enriched_cart.sort(key=lambda x: str(x["product_id"]))
             return jsonify(enriched_cart), 200
 
         except Exception as e:
