@@ -1,4 +1,5 @@
 from typing import List, Optional
+import uuid
 from Application.seed.seed import Seed
 from config import appsettings
 from Application.category.getcategory.categoryvm import CategoryVM
@@ -22,7 +23,7 @@ class CategoryHandler:
         category_json = response.json()
         return [CategoryVM.from_dict(category) for category in category_json]
 
-    def get_product_by_id(self, category_id: int) -> Optional[CategoryVM]:
+    def get_product_by_id(self, category_id: uuid) -> Optional[CategoryVM]:
 
         response = self.client.get(f"{self.product_service_url}/categories/{category_id}")
         response.raise_for_status()
