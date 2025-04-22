@@ -9,6 +9,7 @@ from Application.order.getorder.orderdto import OrderDTO
 from Application.order.getorder.orderhistoryvm import GetOrderHistoryVM
 from Application.order.getorder.orderwithorderitemsvm import OrderVM
 from Application.order.getorder.orderhandler import OrderHandler 
+from Application.product.getproduct.getproducthandler import ProductHandler
 from config import appsettings
 from marshmallow import ValidationError
 import json
@@ -43,7 +44,7 @@ class GetUserCartAPI(MethodView):
                 cart_dict = item.to_dict()
                 try:
                     print("*****product id: "+item.product_id)
-                    product_info = cart_handler.get_product_info(item.product_id, jwt_token)
+                    product_info = cart_handler.get_product_info(item.product_id)
                     cart_dict["product_name"] = product_info.get("name")
                     cart_dict["image_url"] = product_info.get("image_url")
                 except Exception as ex:
@@ -52,7 +53,7 @@ class GetUserCartAPI(MethodView):
                     print(f"Failed to fetch product for {item.product_id}: {ex}")
 
                 enriched_cart.append(cart_dict)
-
+            
             enriched_cart.sort(key=lambda x: str(x["product_id"]))
             return jsonify(enriched_cart), 200
 
@@ -84,7 +85,7 @@ class AddToCartAPI(MethodView):
             cart_dict = cart_item.to_dict()
 
             # Step 2: Fetch product info from Product MS
-            product_info = handler.get_product_info(data['product_id'], token)
+            product_info = handler.get_product_info(data['product_id'])
 
             # Step 3: Merge product info into cart item response
             if product_info:
@@ -158,20 +159,33 @@ class GetUserOrdersAPI(MethodView):
 
 @blueprint.route("/<order_id>", methods=["GET"])
 class GetOrderHistoryAPI(MethodView):
-    @jwt_required()  # Ensure token is required
+    @jwt_required()
     def get(self, order_id):
-        jwt_user = get_jwt_identity()  # Get user identity from the token
+        jwt_user = get_jwt_identity()
 
-        if not jwt_user:  # Ensure valid token
+        if not jwt_user:
             return jsonify({"error": "Unauthorized"}), 401
 
         try:
-            token = request.headers.get("Authorization")  # Pass the JWT token to the handler
+            token = request.headers.get("Authorization")
             handler = OrderHandler(ORDER_MICROSERVICE_URL)
-            order_data = handler.get_order_by_id(order_id,token)
+            order_data = handler.get_order_by_id(order_id, token)
 
             if not order_data:
                 abort(404, message="Order not found")
+
+            # Enrich order_items with product name and image_url
+            product_handler = ProductHandler(appsettings['ProductMicroserviceUrl'])
+
+            for item in order_data.get("order_items", []):
+                try:
+                    product_info = product_handler.get_product_by_id(item["product_id"])
+                    item["name"] = product_info.name
+                    item["image_url"] = product_info.image_url
+                except Exception as ex:
+                    item["name"] = "Unknown"
+                    item["image_url"] = ""
+                    print(f"[WARN] Failed to fetch product {item['product_id']}: {ex}")
 
             vm = GetOrderHistoryVM.from_dict(order_data)
             return jsonify(vm.to_dict()), 200
