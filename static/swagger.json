@@ -5,7 +5,7 @@
     "title": "Grocery Online Shopping BFF",
     "description": "API documentation for the BFF microservice"
   },
-  "host": "localhost:5000",
+  "host": "localhost:5001",
   "basePath": "/",
   "schemes": ["http"],
   "paths": {

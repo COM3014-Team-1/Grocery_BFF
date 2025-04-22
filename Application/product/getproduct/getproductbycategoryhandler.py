@@ -5,7 +5,6 @@ from Application.product.getproduct.getproductvm import ProductVM
 
 PRODUCT_MS_URL = appsettings['ProductMicroserviceUrl']
 
-
 class GetProductByCategoryHandler:
     def __init__(self):
         self.client = requests.Session()

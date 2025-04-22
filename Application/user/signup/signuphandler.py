@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from Application.user.getuser.getuservm import UserVM
+from Application.user.userinfo.getuservm import UserVM
 from config import appsettings
 from typing import Optional  
 
