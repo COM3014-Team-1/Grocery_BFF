@@ -27,27 +27,9 @@ USER_MICROSERVICE_URL = appsettings['UserMicroserviceUrl']  # Load the URL from 
 class LoginAPI(MethodView):
     @blueprint.arguments(LoginDTO)
     def post(self, data):
-        """User Login API"""
-        try:
-            user_response, status_code = LoginHandler.login(data)
-
-            if status_code == 200:
-                login_vm = LoginVM.from_json(user_response)
-                return jsonify(login_vm.to_dict()), status_code
-
-            return jsonify({"message": "Invalid credentials"}), 401
-
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-from flask import request
-
-@blueprint.route("/login_cookies", methods=["POST"])
-class LoginAPI_Cookies(MethodView):
-    @blueprint.arguments(LoginDTO)
-    def post(self, data):
         """User Login API to store token in cookies"""
         try:
+            print("****login with cookie**********")
             user_response, status_code = LoginHandler.login(data)
 
             if status_code == 200:
@@ -61,8 +43,8 @@ class LoginAPI_Cookies(MethodView):
                 response.set_cookie(
                     key='token',
                     value=token,
-                    httponly=True,         # Ensure it's set to True in production (for security)
-                    secure=True,           # Set to True if using HTTPS
+                    httponly=False,         # Ensure it's set to True in production (for security)
+                    secure=False,           # Set to True if using HTTPS
                     samesite='Lax',        # Or 'Strict' / 'None' based on your setup
                     max_age=3600           # 1 hour expiration
                 )
