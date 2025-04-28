@@ -30,7 +30,7 @@ class CategoryListAPI(MethodView):
             return jsonify({"error": str(e)}), 500
 
 
-@blueprint.route("/<int:category_id>")
+@blueprint.route("/<uuid:category_id>")
 class CategoryByIdAPI(MethodView):
     def get(self, category_id):
         """Retrieve a single category by its ID ()"""
