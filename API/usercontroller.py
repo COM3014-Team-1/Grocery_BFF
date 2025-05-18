@@ -43,7 +43,7 @@ class LoginAPI(MethodView):
                 response.set_cookie(
                     key='token',
                     value=token,
-                    httponly=False,         # Ensure it's set to True in production (for security)
+                    httponly=True,         # Ensure it's set to True in production (for security)
                     secure=False,           # Set to True if using HTTPS
                     samesite='Lax',        # Or 'Strict' / 'None' based on your setup
                     max_age=3600           # 1 hour expiration
@@ -72,7 +72,7 @@ class LogoutAPI(MethodView):
             key='token',
             value='',
             expires=0,          # Expire immediately
-            httponly=False,     # Should match what you used during login
+            httponly=True,     # Should match what you used during login
             secure=False,       # Match your login setup
             samesite='Lax'      # Consistent with login setup
         )
