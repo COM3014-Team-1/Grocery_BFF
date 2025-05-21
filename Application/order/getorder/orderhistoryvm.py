@@ -1,6 +1,3 @@
-from flask.config import T
-
-
 class GetOrderHistoryVM:
     def __init__(self, order_id, user_id, shipping_address, order_status, order_items, total_amount):
         self.order_id = order_id

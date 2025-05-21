@@ -25,11 +25,12 @@ class UserHandler:
 
     def get_user_by_id(self, user_id: uuid, jwt_token: str) -> Optional[UserVM]:
         """Retrieve a user by their user ID from the user microservice."""
-        
+        headers = self._get_auth_headers(jwt_token)
+        # Send GET request to fetch cart items
         url = f"{self.user_service_url}/api/auth/user/{user_id}"
         print(f"****** Calling user microservice at: {url}")
 
-        response = self.client.get(url) #, headers=headers) when the authorization check is ready
+        response = self.client.get(url, headers=headers)
 
         if response.status_code == 404:
             print("****** User not found.")
